@@ -171,6 +171,7 @@ $(document).ready(function($) {
         var first_of_this_period = $( '.calendar-control .this-week' )
             .attr( 'data-first_of_this_period' );
         var skv_event = skv_events_by_uid[ event_uid ];
+        var is_ticketed = skv_event.signup_options.tickets.enabled;
 
         var str_html = '<div class="event-details">'
             + '<h2>' + skv_event.name + '</h2>'
@@ -181,6 +182,12 @@ $(document).ready(function($) {
             + skv_event.location.name + '</a></p>'
             + buildDateString( skv_event.datetime_start, skv_event.datetime_end )
             + '<br />';
+
+        if( is_ticketed ){
+            str_html += 'For full event details and tickets, see the '
+            + '<a href="' + skv_event.signup_options.tickets.url 
+            + '">event details</a> page.';
+        }
 
         var img_src = '';
         var has_img = true;
