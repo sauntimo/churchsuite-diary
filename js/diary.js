@@ -171,7 +171,7 @@ $(document).ready(function($) {
         var first_of_this_period = $( '.calendar-control .this-week' )
             .attr( 'data-first_of_this_period' );
         var skv_event = skv_events_by_uid[ event_uid ];
-        var is_ticketed = skv_event.signup_options.tickets.enabled;
+        var is_ticketed = skv_event.signup_options.tickets.enabled === 1;
 
         var str_html = '<div class="event-details">'
             + '<h2>' + skv_event.name + '</h2>'
