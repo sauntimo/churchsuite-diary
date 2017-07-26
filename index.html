@@ -1,0 +1,48 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>churchApp Games</title>
+
+    <!-- style -->
+    <link href="assets/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="css/diary-styles.css" rel="stylesheet">
+
+</head>
+<body>
+
+    <!-- Markup -->
+    <div class="diary-container">
+        <div class="calendar">
+            <div class="calendar-control">
+                <div class="previous-period" title="Previous month">&lt; Back</div>
+                <div class="this-week" title="Return to current month">This Week</div>
+                <div class="next-period" title="Next month">Forward &gt;</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal (populated by JS) -->
+    <div class="modal fade" id="eventModal" tabindex="-1" role="dialog" aria-labelledby="eventModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header"></div>
+                <div class="modal-body">
+                    [body]
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Javascript -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+    <script src="assets/bootstrap/bootstrap.min.js"></script>
+    <script src="js/diary.js"></script>
+
+</body>
+</html>
