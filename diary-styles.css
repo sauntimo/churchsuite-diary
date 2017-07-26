@@ -1,0 +1,179 @@
+.diary-container * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.diary-container a {
+    color: #60a8d0;
+    font-weight: bold;
+}
+
+.diary-container .calendar-summary,
+.diary-container .event-details {
+    width: 100%;
+    float: left;
+    clear: both;
+    background-color: white;
+}
+
+.diary-container .calendar-summary .week {
+    float: left;
+    width: 100%;
+}
+
+.diary-container .week .week-title-wrap {
+    margin: 20px 0;
+}
+
+.diary-container .week .week-title-wrap .week-title {
+    font-size: 2em;
+}
+
+.diary-container .calendar-summary .weekdays,
+.diary-container .calendar-summary .sunday {
+    width: 100%;
+    float: left;
+}
+
+.diary-container .calendar-summary .date-container {
+    margin-bottom: 20px;
+}
+
+.diary-container .calendar-summary .date-container .title-wrap {
+    margin-bottom: 10px;
+    color: #adadad;
+    border-bottom: 3px solid #dcdcdc;
+    font-weight: bold;
+}
+
+.diary-container .calendar-summary .event-summary .event-name {
+    color: #60a8d0;
+    font-weight: bold;
+}
+
+.diary-container .calendar-summary .event-summary .event-time {
+    display: block;
+    float: none;
+    color: #60a8d0;
+    font-weight: bold;
+}
+
+.diary-container .calendar-summary .date-container .event-summary {
+    margin-bottom: 5px;
+}
+
+.modal a {
+    font-weight: bold;
+}
+
+.modal-header {
+    padding: 0;
+    border-bottom: none;
+}
+
+.modal-img {
+    width: 100%;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+
+@media (min-width: 400px) {
+    .diary-container .calendar-summary .event-summary .event-time {
+        display: inline;
+        float: right;
+    }
+}
+
+@media (min-width: 768px) {
+    .diary-container .calendar-summary .weekdays {
+        width: 50%;
+        padding-right: 20px;
+    }
+    
+    .diary-container .calendar-summary .sunday {
+        width: 50%;
+    }
+}
+
+@media (min-width: 1000px) {
+
+    .diary-container .calendar {
+        float: none;
+        width: 956px;
+        margin: 0 auto;
+    }
+
+    .diary-container .calendar-summary,
+    .diary-container .event-details {
+        width: 956px;
+    }
+}
+
+.diary-container .event-summary:hover{
+    cursor: pointer;
+}
+
+.diary-container .event-summary:hover span {
+    text-decoration: underline;
+}
+
+.diary-container .calendar-full {
+    clear: both;
+    float: left;
+}
+
+.diary-container .calendar-control {
+    width: 100%;
+    margin-bottom: 20px;
+    float: left;
+}
+
+.diary-container .calendar-control .previous-period,
+.diary-container .calendar-control .this-week,
+.diary-container .calendar-control .next-period {
+    width: 100%;
+    padding: 10px;
+    margin: 0 5px 5px 0;
+    float: left;
+    border-radius: 3px;
+    color: white;
+    background-color: #60a8d0;
+    font-size: 17px;
+    text-align: center;
+}
+
+.diary-container .calendar-control .previous-period:hover,
+.diary-container .calendar-control .this-week:hover,
+.diary-container .calendar-control .next-period:hover {
+    background-color: #5697bb;
+    cursor: pointer;
+}
+
+@media (min-width: 400px) {
+
+    .diary-container .calendar-control .previous-period,
+    .diary-container .calendar-control .this-week,
+    .diary-container .calendar-control .next-period {
+        width: 100px;
+        margin: 0;
+        border-radius: 25px;
+    }
+
+    .diary-container .calendar-control .this-week {
+        border-radius: 0;
+    }
+
+    .diary-container .calendar-control .previous-period {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+        border-right: 1px solid white;
+    }
+
+    .diary-container .calendar-control .next-period {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        border-left: 1px solid white;
+    }
+}
