@@ -1,36 +1,36 @@
+// global vars
+var skv_dates = {};
+var skv_events_by_uid = {};
+
 var date_format = 'dddd, Do MMMM YYYY h:mm a';
 var api_date_format = 'YYYY-MM-DD';
 var arr_months = [ 'January','February','March','April','May', 'June',
     'July','August','September','October','November','December' ];
 
-$(document).ready(function($) {
 
-    // global vars
-    skv_events_by_uid = {};
-    count_individual_dates = 0;
+$(document).ready(function($) {
 
     (function init(){
 
-        var first_of_this_period = moment().startOf( 'week' ).format( api_date_format );
+        var first_of_this_period = moment().startOf( 'isoweek' ).format( api_date_format );
 
         $( '.this-week' )
             .attr( 'data-first_of_this_period', first_of_this_period );
 
         var first_day = moment()
-            .startOf( 'week' )
-            .add( 1, 'days' )
+            .startOf( 'isoweek' )
             .format( api_date_format );
         
         var last_day = moment()
-            .endOf( 'week' )
-            .add( 8, 'days' )
+            .endOf( 'isoweek' )
+            .add( 1, 'weeks' )
             .format( api_date_format );
 
         getCalendarData( first_day, last_day );
 
-        attachCalendarControlClickHandlers();
-
     })();
+
+});
 
     /**
      *  I get the start and end of a give period
@@ -42,7 +42,7 @@ $(document).ready(function($) {
 
     function getKeyDates( first_of_this_period, type ){
 
-        var skv_dates = {};
+        var skv_key_dates = {};
 
         switch ( type ) {
 
@@ -94,7 +94,7 @@ $(document).ready(function($) {
 
         }
 
-        return skv_dates;
+        return skv_key_dates;
     }
 
     /**
@@ -103,7 +103,7 @@ $(document).ready(function($) {
      *  @return none
      */
 
-    function updateCalendar( skv_dates ){
+    function updateCalendar( skv_key_dates ){
 
         $( '.calendar-control .this-week' )
             .attr( 'data-first_of_this_period', skv_dates.first_day );
@@ -277,15 +277,15 @@ $(document).ready(function($) {
                 + m_start.format( date_format ) + '</p>'
                 + '<p><strong>End:</strong> ' 
                 + m_end.format( date_format ) + '</p>';
-            // single day event
+        
+        // single day event
         } else {
 
             str_html += '<p><strong>Date: </strong>' 
                 + m_start.format( 'dddd, Do MMMM YYYY' ) + '</p>'
                 + '<p><strong>Time: </strong>' 
                 + m_start.format( 'h:mm a' ) + ' - ' 
-                + m_end.format( 'h:mm a' ) + '</p>';       
-
+                + m_end.format( 'h:mm a' ) + '</p>';
         }
 
         return str_html;
@@ -294,24 +294,21 @@ $(document).ready(function($) {
 
     /**
      *  I process eventDays: whole events and days of multiday events
+     *  I am a void function which modifies the global skv_event object as a side effect
      *
      *  @param start_date_string the start date of the event in api_date_format
      *  @param skv_event an object containing the event data
      *  @param skv_dates a struct of all of the dates to edit and return
-     *  @return skv_dates
      */
 
-    function processSingleEventDay( start_date_string, skv_event, skv_dates ){
+    function processSingleEventDay( start_date_string, skv_event ){
 
         // put event struct in to global event array for access later
         skv_events_by_uid[ skv_event.event_uid ] = skv_event;
 
         if( !skv_dates.hasOwnProperty( start_date_string ) ){
         
-            count_individual_dates++;
-
             skv_dates[ start_date_string ] = {
-                'order'      : count_individual_dates,
                 'date'       : start_date_string,
                 'arr_events' : [ skv_event ]
             };
@@ -319,8 +316,6 @@ $(document).ready(function($) {
         } else {
             skv_dates[ start_date_string ].arr_events.push( skv_event );
         }
-
-        return skv_dates;
 
     }
 
@@ -333,9 +328,8 @@ $(document).ready(function($) {
 
     function buildSummaryListData( data, first_day, last_day ){
 
-        var skv_dates = {};
-        var arr_dates = [];
-        var count_individual_dates = 0;
+        // set global skv_event back to an empty object to avoid repitition
+        skv_dates = {};
 
         data.forEach( function( skv_event ){
 
@@ -383,33 +377,31 @@ $(document).ready(function($) {
 
                     // force string concatenation with '' to start
                     skv_event.event_uid = '' + skv_event.id + start_date_string
-                    skv_dates = processSingleEventDay( 
+                    processSingleEventDay( 
                         start_date_string,
-                        skv_event,
-                        skv_dates
+                        skv_event
                     );
                 }
             } else {
-                skv_dates = processSingleEventDay(
+                processSingleEventDay(
                     start_date_string,
-                    skv_event,
-                    skv_dates
+                    skv_event
                 );
             }
 
         });
 
-        for( var key in skv_dates ){
-            arr_dates.push( skv_dates[ key ] );
-        }
+        var str_html = '<div class="calendar-summary">'
+            + buildSummaryListMarkupAll( first_day, last_day, '' )
+            + '</div>';
 
-        arr_dates.sort(function(a,b){
-            return (a.order > b.order) 
-                ? 1 
-                : ((b.order > a.order) ? -1 : 0);
-        });
+        $( '.calendar .event-details' ).remove();
+        $( '.calendar .calendar-summary' ).remove();
+        $( '.calendar' ).append( str_html );
 
-        buildSummaryListMarkup( arr_dates, first_day, last_day );
+        attachCalendarControlClickHandlers();
+        attachEventSummaryClickHandler()
+
 
     }
 
@@ -423,10 +415,13 @@ $(document).ready(function($) {
 
     function buildWeekTitle( start_date ){
 
-        var week_from = moment( start_date ).startOf( 'week' ).add( 1, 'days' );
-        var week_to = moment( start_date ).endOf( 'week' ).add( 1, 'days' );
+        var week_from = moment( start_date ).startOf( 'isoweek' );
+        var week_to = moment( start_date ).endOf( 'isoweek' );
 
-        var week_title = week_from.format( 'Do' ) + ' - '
+        var diff_months = ( week_to.format( 'MMMM' ) !== week_from.format( 'MMMM' ) );
+        var to_format = diff_months ? 'Do MMMM' : 'Do';
+
+        var week_title = week_from.format( to_format ) + ' - '
             + week_to.format( 'Do MMMM' );
 
         return '<div class="week-title-wrap"><div class="week-title">'
@@ -434,6 +429,7 @@ $(document).ready(function($) {
             + '</div></div>';
 
     }
+
 
     /**
      *  I build the mark up for the calendar summary - event titles and times by date, and put it on the page
@@ -445,80 +441,117 @@ $(document).ready(function($) {
      */
 
 
-    function buildSummaryListMarkup( arr_dates, first_day, last_day ){
+    function buildSummaryListMarkupAll( first_day, last_day, markup ){
 
-        var str_html = '<div class="calendar-summary">';
-        str_html += '<div class="week">'
-            + buildWeekTitle( arr_dates[0].date )
-            + '<div class="weekdays">';
+        var str_html = markup;
+        var loop_date = moment( first_day );
+        var week_end = moment( first_day ).add( 6, 'days'); 
+        
+        var skv_week = {
+            arr_weekdays: [],
+            skv_sunday: {}
+        };
 
-        // Loop over individual dates
-        arr_dates.forEach( function( skv_date, index ){
+        while ( loop_date.isSameOrBefore( week_end )
+                && loop_date.isSameOrBefore( moment( last_day ) ) ) {
+            // console.log( loop_date.format('dddd Do, MMMM YYYY') );
 
-            // ignore multi day events starting before the range starts
-            if( moment( skv_date.date ).isBefore( moment( first_day ) ) ){
-                var deleted = arr_dates.splice( index, 1 );
-                return;
-            }
-
-            // ignore multi day events ending after the range ends
-            if( moment( skv_date.date ).isAfter( moment( last_day ) ) ){
-                var deleted = arr_dates.splice( index, 1 );
-                return;
-            }
-
-            var day_name = moment( skv_date.date ).format( 'dddd' );
-
-            if( day_name == 'Sunday' ){
-                str_html += '</div><div class="sunday">'
-            }
-
-            var date_string = moment( skv_date.date ).format( 'dddd, Do MMMM' );
-
-            str_html += '<div class="date-container">';
-            str_html += '<div class="title-wrap"><span class="title">'
-                + '<span class="day-name">' + day_name + '</span>, ' 
-                + date_string.replace( day_name + ', ', '' ) + '</span></div>';
-
-            // Loop over events on specific date
-            skv_date.arr_events.forEach( function( skv_event ){
-
-                time_string = moment( skv_event.datetime_start ).format( 'h:mm a' );
-                if( moment( skv_event.datetime_start ).format( 'HH:mm:ss' ) === "00:00:00" 
-                    && moment( skv_event.datetime_end ).format( 'HH:mm:ss' ) === "23:59:59" ){
-                    time_string = "All day";
+            if( skv_dates[ loop_date.format('YYYY-MM-DD') ] ){
+                
+                this_date = skv_dates[ loop_date.format('YYYY-MM-DD') ];
+                if( loop_date.format( 'dddd' ) === 'Sunday' ){
+                    skv_week.skv_sunday = this_date;
+                } else {
+                    skv_week.arr_weekdays.push( this_date );
                 }
-
-
-                str_html += '<div class="event-summary" data-event_uid="' 
-                    + skv_event.event_uid +'">' 
-                    + '<span class="event-name">' +  skv_event.name + '</span> ' 
-                    + '<span class="event-time">' + time_string + '</span>' 
-                    + '</div>';
-
-            });
-
-            if( moment( skv_date.date ).format( 'dddd' ) == 'Sunday'
-                && ( skv_date.date != arr_dates[ arr_dates.length - 1 ].date ) ){
-                str_html += '</div></div></div><div class="week">'
-                    + buildWeekTitle( skv_date.date )
-                    + '<div class="weekdays">'
-            } else {
-                str_html += '</div>';
             }
 
+            // this is the looping logic
+            loop_date = loop_date.add(1, 'days');
+        }
 
-        });
+        str_html += buildSummaryListMarkupSingleWeek( first_day, skv_week );
 
-        str_html += '</div>';
+        // call myself recursively to build markup for future weeks
+        if( loop_date.add(1, 'days').isBefore( moment( last_day ) ) ){
+            var new_first_day = loop_date.add(1, 'days').format('YYYY-MM-DD');
+            return buildSummaryListMarkupAll( new_first_day, last_day, str_html );
 
-        $( '.calendar .event-details' ).remove();
-        $( '.calendar .calendar-summary' ).remove();
-        $( '.calendar' ).append( str_html );
-
-        attachCalendarControlClickHandlers();
-        attachEventSummaryClickHandler()
+        // no more weeks required, return markup
+        } else {
+            return str_html;
+        }
 
     }
 
-});
+
+    function buildSummaryListMarkupSingleWeek( first_day, skv_week ){
+
+        var str_html = '<div class="week">'
+            + buildWeekTitle( first_day );
+
+        // build markup for weekdays
+        str_html += '<div class="weekdays">';
+        if( skv_week.arr_weekdays.length ){
+            skv_week.arr_weekdays.forEach(function(skv_date){
+                str_html += buildSingleDay( skv_date );
+            });
+        } else {
+            str_html += '<div class="date-container">'
+            + '<div class="title-wrap"><span class="title">'
+            + 'No events scheduled Monday - Saturday this week.'
+            + '</span></div></div>';
+        }
+        
+        str_html += '</div>';
+
+        // build markup for sunday
+        str_html += '<div class="sunday">';
+        if( skv_week.skv_sunday.arr_events ){
+            str_html += buildSingleDay( skv_week.skv_sunday );
+        } else {
+            str_html += '<div class="date-container">'
+            + '<div class="title-wrap"><span class="title">'
+            + 'No events scheduled on this Sunday.'
+            + '</span></div></div>';
+        }
+
+        str_html += '</div>';
+        str_html += '</div>';
+
+        return str_html;
+
+    }
+
+
+    function buildSingleDay( skv_date ){
+        var date_string = moment( skv_date.date ).format( 'Do MMMM' );
+        var day_name = moment( skv_date.date ).format( 'dddd' );
+
+        var str_html = '<div class="date-container">'
+            + '<div class="title-wrap"><span class="title">'
+            + '<span class="day-name">' + day_name + '</span>, ' 
+            + date_string + '</span></div>';
+
+        // Loop over events on specific date
+        skv_date.arr_events.forEach( function( skv_event ){
+
+            time_string = moment( skv_event.datetime_start ).format( 'h:mm a' );
+            if( moment( skv_event.datetime_start ).format( 'HH:mm:ss' ) === "00:00:00" 
+                && moment( skv_event.datetime_end ).format( 'HH:mm:ss' ) === "23:59:59" ){
+                time_string = "All day";
+            }
+
+            str_html += '<div class="event-summary" data-event_uid="' 
+                + skv_event.event_uid +'">' 
+                + '<span class="event-name">' +  skv_event.name + '</span> ' 
+                + '<span class="event-time">' + time_string + '</span>' 
+                + '</div>';
+        });
+
+        // close .date-container
+        str_html += '</div>';
+
+        return str_html;
+
+    }
