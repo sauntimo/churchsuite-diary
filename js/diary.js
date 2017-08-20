@@ -50,14 +50,10 @@ function getKeyDates( first_of_this_period, type ){
 
             skv_dates.first_day = moment( first_of_this_period )
                 .subtract( 1, 'weeks' )
-                .startOf( 'week' )
-                .add( 1, 'days' )
                 .format( api_date_format );
 
             skv_dates.last_day = moment( first_of_this_period )
-                .subtract( 1, 'weeks' )
-                .endOf( 'week' )
-                .add( 8, 'days' )
+                .add( 1, 'weeks' )
                 .format( api_date_format );
 
         break;
@@ -65,13 +61,10 @@ function getKeyDates( first_of_this_period, type ){
         case 'current' :
 
             skv_dates.first_day = moment( first_of_this_period )
-                .startOf( 'week' )
-                .add( 1, 'days' )
                 .format( api_date_format );
 
             skv_dates.last_day = moment( first_of_this_period )
-                .endOf( 'week' )
-                .add( 8, 'days' )
+                .add( 2, 'weeks' )
                 .format( api_date_format );
                 
         break;
@@ -80,14 +73,10 @@ function getKeyDates( first_of_this_period, type ){
 
             skv_dates.first_day = moment( first_of_this_period )
                 .add( 1, 'weeks' )
-                .startOf( 'week' )
-                .add( 1, 'days' )
                 .format( api_date_format );
 
             skv_dates.last_day = moment( first_of_this_period )
-                .add( 1, 'weeks' )
-                .endOf( 'week' )
-                .add( 8, 'days' )
+                .add( 3, 'weeks' )
                 .format( api_date_format );
                 
         break;
@@ -464,8 +453,8 @@ function buildSummaryListMarkupAll( first_day, last_day, markup ){
     str_html += buildSummaryListMarkupSingleWeek( first_day, skv_week );
 
     // call myself recursively to build markup for future weeks
-    if( loop_date.add(1, 'days').isBefore( moment( last_day ) ) ){
-        var new_first_day = loop_date.add(1, 'days').format('YYYY-MM-DD');
+    if( loop_date.isBefore( moment( last_day ) ) ){
+        var new_first_day = loop_date.format('YYYY-MM-DD');
         return buildSummaryListMarkupAll( new_first_day, last_day, str_html );
 
     // no more weeks required, use built markup
