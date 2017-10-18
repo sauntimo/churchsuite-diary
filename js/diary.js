@@ -32,8 +32,9 @@ $(document).ready(function($) {
 
 });
 
+
 /**
- *  I get the start and end of a give period
+ *  I get the start and end of a given period
  *
  *  @param first_of_this_period the first day of the currently displayed period in format "YYYY-MM-DD"
  *  @param type string direction, 'previous', 'current' or 'next'
@@ -86,6 +87,7 @@ function getKeyDates( first_of_this_period, type ){
     return skv_key_dates;
 }
 
+
 /**
  *  I update the summary summary list based on input from calendar navigation controls
  *
@@ -99,6 +101,7 @@ function updateCalendar( skv_key_dates ){
 
     getCalendarData( skv_dates.first_day, skv_dates.last_day );
 }
+
 
 /**
  *  I attach click handlers to calendar navigation controls
@@ -130,12 +133,12 @@ function attachCalendarControlClickHandlers(){
 
 }
 
+
 /**
  *  I attach click handlers to event-summary items to show their details
  *
  *  @return none
  */
-
 
 function attachEventSummaryClickHandler(){
 
@@ -147,13 +150,13 @@ function attachEventSummaryClickHandler(){
 
 }
 
+
 /**
  *  I show event modal with detailed description of an event if clicked on in the summary list view
  *
  *  @param event_uid the unique id of the event
  *  @return none
  */
-
 
 function showEventDetails( event_uid ){
 
@@ -233,6 +236,7 @@ function getCalendarData( first_day, last_day ){
     });
 }
 
+
 /**
  *  I remove URL encoding
  *
@@ -245,6 +249,7 @@ function htmlDecode( input ){
     e.innerHTML = input;
     return e.childNodes[0].nodeValue;
 }
+
 
 /**
  *  I build date strings for different lengths of events
@@ -281,6 +286,7 @@ function buildDateString( start, end ){
 
 }
 
+
 /**
  *  I process eventDays: whole events and days of multiday events
  *  I am a void function which modifies the global skv_event object as a side effect
@@ -307,6 +313,7 @@ function processSingleEventDay( start_date_string, skv_event ){
     }
 
 }
+
 
 /**
  *  I loop over all data returned from the API call, organise it and call a markup fn
@@ -384,13 +391,13 @@ function buildSummaryListData( data, first_day, last_day ){
 
 }
 
+
 /**
  *  I build a week title for a give start date
  *
  *  @param start_date the first day of the week (monday) in format "YYYY-MM-DD"
  *  @return html string
  */
-
 
 function buildWeekTitle( start_date ){
 
@@ -419,7 +426,6 @@ function buildWeekTitle( start_date ){
  *  @param markup html string passed in
  *  @return html string 
  */
-
 
 function buildSummaryListMarkupAll( first_day, last_day, markup ){
 
@@ -551,6 +557,7 @@ function buildSingleDay( skv_date ){
     return str_html;
 
 }
+
 
 /**
  *  I update the markup on the page
