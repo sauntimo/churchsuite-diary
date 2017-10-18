@@ -196,6 +196,12 @@ function showEventDetails( event_uid ){
     $( '#eventModal .modal-header' )
         .empty();
 
+    var btn_markup = '<button type="button" class="close" data-dismiss="modal" aria-label="Close">'
+        + '<span aria-hidden="true">&times;</span></button>';
+
+    $( '#eventModal .modal-header' )
+            .append( btn_markup );
+
     if( has_img ){
         $( '#eventModal .modal-header' )
             .append( '<img class="modal-img" src="' + img_src + '" />' );
