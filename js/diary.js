@@ -160,6 +160,7 @@ function attachEventSummaryClickHandler(){
 
 function showEventDetails( event_uid ){
 
+
     var first_of_this_period = $( '.calendar-control .this-week' )
         .attr( 'data-first_of_this_period' );
     var skv_event = skv_events_by_uid[ event_uid ];
@@ -174,9 +175,15 @@ function showEventDetails( event_uid ){
         + '<br /><br /><p><strong>Venue:</strong> <a href="https://www.google.co.uk/maps/@' 
         + skv_event.location.latitude + ',' + skv_event.location.longitude 
         + ',17z" target="_blank">'
-        + skv_event.location.name + '</a></p>'
-        + buildDateString( skv_event.datetime_start, skv_event.datetime_end )
-        + '<br />';
+        + skv_event.location.name + '</a></p>';
+    
+    if( skv_event.is_multi_day ){
+        str_html += skv_event.str_multi_full_dates;
+    } else {
+        str_html += buildDateString( skv_event.datetime_start, skv_event.datetime_end );
+    }
+
+    str_html += '<br />';
 
     if( is_ticketed ){
         str_html += 'For full event details and tickets, see the '
@@ -273,6 +280,8 @@ function buildDateString( start, end ){
 
     // multiday event
     if( m_start.format( 'YYYY-MM-DD' ) !== m_end.format( 'YYYY-MM-DD' ) ){
+
+
         str_html += '<p><strong>Start:</strong> ' 
             + m_start.format( date_format ) + '</p>'
             + '<p><strong>End:</strong> ' 
@@ -347,41 +356,59 @@ function buildSummaryListData( data, first_day, last_day ){
         var event_duration_days = end_date.diff( start_date, 'days' );
         // force string concatenation with '' to start
         skv_event.event_uid = '' + skv_event.id + start_date_string
+        skv_event.is_multi_day = false;
+
 
         // handle multi day events
         if( event_duration_days > 1 ){
+
+            skv_event.is_multi_day = true;
+            skv_event.str_multi_full_dates = buildDateString( start_date, end_date );
 
             var this_date = moment( start_date );
             start_date_string = '';
 
             for( i = 0; i <= event_duration_days; i++ ){
 
+                var skv_temp_event = JSON.parse( JSON.stringify( skv_event ) );
+
                 start_date_string = moment( this_date ).format( api_date_format );
-                this_date = moment( this_date ).add( 1, 'days' );
 
 
-                if( i === 1 ){
-                    skv_event.datetime_end = moment( this_date ).endOf( 'day' )
+                if( i === 0 ){
+
+                    skv_temp_event.datetime_end = moment( this_date ).endOf( 'day' )
                         .format( "YYYY-MM-DD HH:mm:ss" );
                 }
 
-                if( i > 1 && i < event_duration_days ){
-                    skv_event.datetime_start = moment( this_date ).startOf( 'day' )
+                if( i > 0 && i < event_duration_days ){
+
+                    skv_temp_event.datetime_start = moment( this_date ).startOf( 'day' )
                         .format( "YYYY-MM-DD HH:mm:ss" );
-                    skv_event.datetime_end = moment( this_date ).endOf( 'day' )
+                    skv_temp_event.datetime_end = moment( this_date ).endOf( 'day' )
                         .format( "YYYY-MM-DD HH:mm:ss" );
                 }
 
                 if( i === event_duration_days ){
-                    skv_event.datetime_start = moment( this_date ).startOf( 'day' )
+
+                    skv_temp_event.datetime_start = moment( this_date ).startOf( 'day' )
                         .format( "YYYY-MM-DD HH:mm:ss" );
+
+                    // if this is the last day of a multiday event and it doesn't end at midnight,
+                    // add time override indicating end time 
+                    if( moment( skv_event.datetime_end ).format( 'HH:mm:ss' ) !== "23:59:59" ){
+                        skv_temp_event.str_override_time = 'Ends at ' + moment( skv_event.datetime_end ).format( 'h:mm a' );
+                    }
+
                 }
 
+                this_date = moment( this_date ).add( 1, 'days' );
+
                 // force string concatenation with '' to start
-                skv_event.event_uid = '' + skv_event.id + start_date_string
+                skv_temp_event.event_uid = '' + skv_temp_event.id + start_date_string
                 processSingleEventDay( 
                     start_date_string,
-                    skv_event
+                    skv_temp_event
                 );
             }
         } else {
@@ -446,7 +473,6 @@ function buildSummaryListMarkupAll( first_day, last_day, markup ){
 
     while ( loop_date.isSameOrBefore( week_end )
             && loop_date.isSameOrBefore( moment( last_day ) ) ) {
-        // console.log( loop_date.format('dddd Do, MMMM YYYY') );
 
         if( skv_dates[ loop_date.format('YYYY-MM-DD') ] ){
             
@@ -545,10 +571,16 @@ function buildSingleDay( skv_date ){
     skv_date.arr_events.forEach( function( skv_event ){
 
         time_string = moment( skv_event.datetime_start ).format( 'h:mm a' );
+        
+        if( skv_event.hasOwnProperty( 'str_override_time' ) ){
+            time_string = skv_event.str_override_time;
+        }
+
         if( moment( skv_event.datetime_start ).format( 'HH:mm:ss' ) === "00:00:00" 
             && moment( skv_event.datetime_end ).format( 'HH:mm:ss' ) === "23:59:59" ){
             time_string = "All day";
         }
+
 
         str_html += '<div class="event-summary" data-event_uid="' 
             + skv_event.event_uid +'">' 
