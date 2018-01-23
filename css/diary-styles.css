@@ -101,9 +101,18 @@
 
 
 @media (min-width: 400px) {
+    .diary-container .calendar-summary .date-container .event-summary {
+        float: left;
+        width: 100%;
+    }
+
     .diary-container .calendar-summary .event-summary .event-time {
         display: inline;
         float: right;
+    }
+
+    .diary-container .calendar-summary .event-summary .event-name {
+        float: left;
     }
 }
 
