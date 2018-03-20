@@ -345,8 +345,16 @@ function buildSummaryListData( data, first_day, last_day ){
     data.forEach( function( skv_event ){
 
         // don't want to display Highgrove events
-        if( skv_event.location 
-            && skv_event.location.name === 'Highgrove Church' ){
+        if( 
+            (
+                skv_event.location &&
+                skv_event.location.name === 'Highgrove Church' 
+            ) ||
+            (
+                skv_event.site &&
+                skv_event.site.name === 'Highgrove'
+            )
+        ){
             return false;
         }
 
