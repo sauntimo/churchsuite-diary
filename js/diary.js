@@ -236,7 +236,7 @@ function getCalendarData( first_day, last_day ){
     var date_format = 'dddd, Do MMMM YYYY h:mm a';
 
     $.ajax({
-        url: 'https://woodlands.churchapp.co.uk/embed/calendar/json',
+        url: 'https://woodlands.churchsuite.co.uk/embed/calendar/json',
         type: 'GET',
         dataType: 'jsonp',
         data: {
