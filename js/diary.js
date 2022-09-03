@@ -162,8 +162,6 @@ function showEventDetails( event_uid ){
 
     var event = ALL_EVENTS_BY_UID[ event_uid ];
 
-    console.log(event);
-
     // ensure there is a preceding hash for the colour hex
     const brandColour = event.brand.color[0] === '#'
         ? event.brand.color
