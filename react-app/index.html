@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>ChurchSuite Diary</title>
+    <link href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script crossorigin src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/fetch-jsonp@1.2.2/build/fetch-jsonp.js"></script>
+    <script crossorigin src="https://unpkg.com/dayjs@1.11.5/dayjs.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+
+      /**
+       * Takes an array of events, finds events spanning multiple days
+       * and replicates them on each day they span
+       */
+      const processMultiDayEvents = (events) => {
+        return events.flatMap(event => {
+          const start = dayjs(event.datetime_start);
+          const end = dayjs(event.datetime_end);
+          const duration = end.diff(start, "day") + 1;
+
+          if(start.isSame(end, "date")){
+            return [{...event, multiDay: false}];
+          }
+
+          return Array.from(Array(duration).keys()).map(index => {
+            return {
+              ...event,
+              datetime_start: start.add(index, "day").startOf("day").toDate(),
+              datetime_end: start.add(index, "day").endOf("day").toDate(),
+              multiDay: true,
+            }
+          });
+        });
+      }
+
+      /**
+       * Takes an array of events and processes them into an array of days
+       * each with an array of events
+       */
+      const processEventsIntoDays = (events) => {
+        const eventDays = events.reduce((prev, cur) => {
+          const currentDate = dayjs(cur.datetime_start);
+          const currentDateString = currentDate.format("YYYY-MM-DD");
+          const data = prev;
+
+          // if this day has already been encountered, add to the events,
+          // otherwise begin with this event
+          data[currentDateString] = {
+            date: currentDate,
+            events: [...(
+              data[currentDateString]
+                ? data[currentDateString].events
+                : []
+            ), cur ]
+          };
+          return data;
+        }, {});
+
+        return Object.values(eventDays);
+      }
+
+      /**
+       * Takes an array of days and processes them into two week objects
+       */
+      const processDaysIntoWeeks = (days, startDate) => {
+        const weeks = {
+          first: {startDate, days: [], sunday: [] },
+          second: {startDate: dayjs(startDate).add(1, "week"), days: [], sunday: [] }
+        };
+
+        days.forEach(day => {
+          const week = day.date.isBefore(dayjs(startDate).add(1, "week")) ? "first" : "second";
+          const type = day.date.format("dddd") === "Sunday" ? "sunday" : "days";
+          weeks[week][type].push(day)
+        })
+
+        return weeks;
+      }
+
+      /**
+       * Get array of events from church suite data and process them into
+       * weeks which can be passed to the week component
+       */
+      const processData = (data, startDate) => {
+        const events = processMultiDayEvents(data);
+        const days = processEventsIntoDays(events);
+        return processDaysIntoWeeks(days, startDate);
+      }
+
+      const Calendar = (props) => {
+        const [weeks, setWeeks] = React.useState([]);
+
+         // Get all event data from ChurchSuite and render a list of events
+        React.useEffect(() => {
+          const getEvents = async () => {
+            const params = new URLSearchParams({
+              date_start: dayjs(props.startDate).format("YYYY-MM-DD"),
+              date_end: dayjs(props.startDate).add(2, "week").format("YYYY-MM-DD"),
+            })
+
+            await fetchJsonp(`https://woodlands.churchsuite.co.uk/embed/calendar/json?${params.toString()}`, {
+              method: 'GET',
+              headers: {'content-type': 'jsonp',  'Access-Control-Allow-Origin':'*'},
+              mode: 'cors',
+            })
+              .then((response) => response.json())
+              .then((data) => setWeeks(processData(data, props.startDate)));
+          }
+
+          getEvents();
+        }, [props.startDate]);
+
+        return (
+          <div>
+            {Object.values(weeks).map(
+              (week) => (
+                <Week
+                  week={week}
+                  setActiveEvent={props.setActiveEvent}
+                />
+            ))}
+          </div>
+        )
+      }
+
+      /**
+       * Render a single week
+       */
+      const Week = (props) => {
+
+        const startDate = dayjs(props.week.startDate).format("D MMMM");
+        const endDate = dayjs(props.week.startDate).add(1, "week").format(" D MMMM");
+        const weekTitle = `${startDate} - ${endDate}`;
+
+        return (
+          <div className="mb-8">
+              <div class="mx-2 mb-4">
+                <span className="text-5xl font-light text-gray-800">{weekTitle}</span>
+              </div>
+              <div class="flex flex-col md:flex-row md:space-x-8">
+                <div class="flex flex-col w-full md:w-1/2">
+                  {props.week.days.map(day =>
+                    <Day
+                      day={day}
+                      setActiveEvent={props.setActiveEvent}
+                    />
+                  )}
+                </div>
+                <div className="w-full md:w-1/2">
+                  <Day
+                    day={props.week.sunday[0]}
+                    setActiveEvent={props.setActiveEvent}
+                  />
+                </div>
+              </div>
+          </div>
+        )
+      }
+
+      /**
+       * Render a single day
+       */
+      const Day = (props) => {
+        if(!props.day){
+          return null;
+        }
+
+        return (
+          <div>
+            <div className="mx-2 border-b-4 border-gray-400">
+              <span className="font-bold text-2xl text-gray-400">{props.day.date.format("dddd, D MMMM")}</span>
+            </div>
+            <div class="flex flex-col py-2">
+              {props.day.events.map(event =>
+                  <Event
+                    event={event}
+                    setActiveEvent={props.setActiveEvent}
+                  />
+              )}
+            </div>
+          </div>
+        )
+      }
+
+      /**
+       * Render a single event
+       */
+      const Event = (props) => {
+        return (
+          <div
+            className="flex flex-row justify-between cursor-pointer p-2 hover:bg-gray-100 rounded-md"
+            onClick={() => props.setActiveEvent(props.event)}
+          >
+              <span className="font-bold text-blue-300">{props.event.name}</span>
+              <span className="font-bold text-blue-300">
+                {props.event.multiDay
+                  ? "All day"
+                  : dayjs(props.event.datetime_start).format("h:mm a")
+                }
+              </span>
+          </div>
+        )
+      }
+
+
+      /**
+       * Render a button
+       */
+      const Button = (props) => {
+        return (
+          <button
+            className={`p-4 bg-blue-300 text-white font-bold hover:bg-blue-400 ${props.styles}`}
+            onClick={props.onClick}
+          >
+            {props.children}
+          </button>)
+        ;
+      }
+
+      const DateControls = (props) => {
+        const lastWeek = dayjs(props.startDate).subtract(1, "week").toDate();
+        const thisWeek = dayjs().startOf("week").add(1, "day").toDate();
+        const nextWeek = dayjs(props.startDate).add(1, "week").toDate();
+
+        const backOneWeek = () => props.setStartDate(lastWeek);
+        const resetDate = () => props.setStartDate(thisWeek);
+        const forwardOneWeek = () => props.setStartDate(nextWeek);
+
+        return (
+          <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:divide-x sm:divide-white mb-8">
+            <Button
+              onClick={() => backOneWeek()}
+              startDate={props.startDate}
+              styles="rounded-full sm:rounded-r-none sm:pl-6"
+            >
+              Back
+            </Button>
+            <Button
+              onClick={() => resetDate()}
+              startDate={props.startDate}
+              styles="rounded-full sm:rounded-none"
+            >
+              This week
+            </Button>
+            <Button
+              onClick={() => forwardOneWeek()}
+              startDate={props.startDate}
+              styles="rounded-full sm:rounded-l-none sm:pr-6"
+            >
+              Forward
+            </Button>
+          </div>
+        );
+      }
+
+      const ActiveEventModal = (props) => {
+
+        const imgUrl = props.event.images && props.event.images.md && props.event.images.md.url;
+        const start = dayjs(props.event.datetime_start);
+        const end = dayjs(props.event.datetime_end);
+        const mapsURL = `https://www.google.co.uk/maps/@${props.event.location.latitude},${props.event.location.longitude},17z`;
+
+        const andTickets = props.event.signup_options.tickets.enabled === "1"
+          ? " and to book a place"
+          : "";
+
+        return (
+          <div
+            className="absolute top-0 right-0 bottom-0 left-0 z-50 bg-gray-800 bg-opacity-50"
+            onClick={(event) => props.setActiveEvent(undefined)}
+          >
+            <div className="m-4 md:m-x-0 md:mt-96 md:m-auto md:w-3/4 lg:w-2/3 xl:w-1/2 bg-white bg-opacity-100 rounded-md">
+              {imgUrl && <img className="w-full rounded-t-md" src={imgUrl} />}
+              <div className="">
+                <div class="p-4">
+                  <span className="text-4xl font-light">{props.event.name}</span>
+                  {props.event.description &&
+                    <div className="py-2" dangerouslySetInnerHTML={{__html: props.event.description}} ></div>
+                  }
+                  {props.event.location.name && (
+                    <p>
+                      <span className="font-bold pr-2">Venue:</span>
+                      <a
+                        href={mapsURL}
+                        target="_blank"
+                        className="font-bold text-blue-300 hover:underline cursor-pointer"
+                      >
+                        {props.event.location.name}
+                      </a>
+                    </p>
+                  )}
+                  <p>
+                    <span className="font-bold pr-2">Date:</span>
+                    {start.format("dddd, D MMMM YYYY")}
+                  </p>
+                  <p>
+                    <span className="font-bold pr-2">Time:</span>
+                    {props.event.multiDay
+                      ? "All day"
+                      : `${start.format("h:mm a")} - ${end.format("h:mm a")}`
+                    }
+                  </p>
+                  <p>For full event details{andTickets}, see the{" "}
+                    <a
+                      href={props.event.signup_options.tickets.url}
+                      target="_blank"
+                      className="font-bold text-blue-300 hover:underline cursor-pointer"
+                    >
+                      event details page
+                    </a>.
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row justify-between md:justify-end space-y-2 sm:space-y-0 sm:space-x-2 border-t border-gray-300 mt-2 p-4">
+                  <a
+                    target="_blank"
+                    href={props.event.signup_options.tickets.url}
+                    className="w-full sm:w-1/2 md:w-auto rounded p-4 bg-blue-300 text-white font-bold hover:bg-blue-400 text-center"
+                  >
+                    Event Details
+                  </a>
+                  <Button
+                    onClick={() => props.setActiveEvent(undefined)}
+                    styles="w-full sm:w-1/2 md:w-auto rounded"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      const App = () => {
+        const initialStartDate = dayjs().startOf("week").add(1, "day").toDate();
+        const [startDate, setStartDate] = React.useState(initialStartDate);
+        const [activeEvent, setActiveEvent] = React.useState();
+
+        return (
+          <div className="p-8 lg:flex lg:flex-row lg:justify-center">
+            <div className="lg:w-5/6 xl:w-4/5 2xl:w-3/4">
+              {activeEvent && <ActiveEventModal event={activeEvent} setActiveEvent={setActiveEvent}/>}
+              <DateControls setStartDate={setStartDate} startDate={startDate}/>
+              <Calendar startDate={startDate} setActiveEvent={setActiveEvent} />
+            </div>
+          </div>
+        );
+      }
+
+      ReactDOM.render( <App />, document.getElementById('root') );
+    </script>
+  </body>
+</html>
