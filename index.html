@@ -154,7 +154,7 @@
         return (
           <div className="mb-8">
               <div class="mx-2 mb-4">
-                <span className="text-5xl font-light text-gray-800">{weekTitle}</span>
+                <span className="text-3xl md:text-5xl font-light text-gray-800">{weekTitle}</span>
               </div>
               <div class="flex flex-col md:flex-row md:space-x-8">
                 <div class="flex flex-col w-full md:w-1/2">
@@ -246,7 +246,7 @@
         const forwardOneWeek = () => props.setStartDate(nextWeek);
 
         return (
-          <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:divide-x sm:divide-white mb-8">
+          <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:divide-x sm:divide-white mb-8">
             <Button
               onClick={() => backOneWeek()}
               startDate={props.startDate}
@@ -361,7 +361,7 @@
         const [activeEvent, setActiveEvent] = React.useState();
 
         return (
-          <div className="p-8 lg:flex lg:flex-row lg:justify-center">
+          <div className="p-2 md:p-8 lg:flex lg:flex-row lg:justify-center">
             <div className="lg:w-5/6 xl:w-4/5 2xl:w-3/4">
               {activeEvent && <ActiveEventModal event={activeEvent} setActiveEvent={setActiveEvent}/>}
               <DateControls setStartDate={setStartDate} startDate={startDate}/>
