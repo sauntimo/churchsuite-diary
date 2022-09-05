@@ -22,17 +22,28 @@
         return events.flatMap(event => {
           const start = dayjs(event.datetime_start);
           const end = dayjs(event.datetime_end);
-          const duration = end.diff(start, "day") + 1;
+          const durationDays = end.diff(start, "day") + 1;
+          const allDay = end.diff(start, "day") + 1;
 
           if(start.isSame(end, "date")){
-            return [{...event, multiDay: false}];
+            return [{...event, multiDay: false, allDay: false}];
           }
 
-          return Array.from(Array(duration).keys()).map(index => {
+          return Array.from(Array(durationDays).keys()).map(index => {
+
+            const newStart = index === 0
+              ? dayjs(event.datetime_start).toDate()
+              : start.add(index, "day").startOf("day").toDate();
+
+            const newEnd = index === (durationDays - 1)
+              ? dayjs(event.datetime_end).toDate()
+              : start.add(index, "day").endOf("day").toDate()
+
             return {
               ...event,
-              datetime_start: start.add(index, "day").startOf("day").toDate(),
-              datetime_end: start.add(index, "day").endOf("day").toDate(),
+              allDay: dayjs(newEnd).diff(dayjs(newStart), "hours") > 22,
+              datetime_start: newStart,
+              datetime_end: newEnd,
               multiDay: true,
             }
           });
@@ -135,7 +146,7 @@
       const Week = (props) => {
 
         const startDate = dayjs(props.week.startDate).format("D MMMM");
-        const endDate = dayjs(props.week.startDate).add(1, "week").format(" D MMMM");
+        const endDate = dayjs(props.week.startDate).add(6, "day").format(" D MMMM");
         const weekTitle = `${startDate} - ${endDate}`;
 
         return (
@@ -199,7 +210,7 @@
           >
               <span className="font-bold text-blue-300">{props.event.name}</span>
               <span className="font-bold text-blue-300">
-                {props.event.multiDay
+                {props.event.allDay
                   ? "All day"
                   : dayjs(props.event.datetime_start).format("h:mm a")
                 }
@@ -215,7 +226,7 @@
       const Button = (props) => {
         return (
           <button
-            className={`p-4 bg-blue-300 text-white font-bold hover:bg-blue-400 ${props.styles}`}
+            className={`p-4 bg-blue-300 text-white font-bold hover:bg-blue-400 shadow hover:shadow-inner ${props.styles}`}
             onClick={props.onClick}
           >
             {props.children}
@@ -272,12 +283,12 @@
 
         return (
           <div
-            className="absolute top-0 right-0 bottom-0 left-0 z-50 bg-gray-800 bg-opacity-50"
+            className="absolute top-0 right-0 bottom-0 left-0 z-50 bg-gray-300 bg-opacity-50 backdrop-filter backdrop-blur-sm"
             onClick={(event) => props.setActiveEvent(undefined)}
           >
-            <div className="m-4 md:m-x-0 md:mt-96 md:m-auto md:w-3/4 lg:w-2/3 xl:w-1/2 bg-white bg-opacity-100 rounded-md">
+            <div className="m-4 md:m-x-0 md:mt-96 md:m-auto md:w-3/4 lg:w-2/3 xl:w-1/2 bg-white bg-opacity-100 rounded-md filter shadow-lg">
               {imgUrl && <img className="w-full rounded-t-md" src={imgUrl} />}
-              <div className="">
+              <div>
                 <div class="p-4">
                   <span className="text-4xl font-light">{props.event.name}</span>
                   {props.event.description &&
@@ -301,9 +312,14 @@
                   </p>
                   <p>
                     <span className="font-bold pr-2">Time:</span>
-                    {props.event.multiDay
+                    {props.event.allDay
+                      // multi day events which go on all day like week long event
                       ? "All day"
-                      : `${start.format("h:mm a")} - ${end.format("h:mm a")}`
+                      : props.event.multiDay
+                      // multi day events which aren't all day like midnight mass
+                        ? `${start.format("h:mm a dddd, D MMMM")} - ${end.format("h:mm a dddd, D MMMM")}`
+                      // standard events which begin and end on the same day
+                        : `${start.format("h:mm a")} - ${end.format("h:mm a")}`
                     }
                   </p>
                   <p>For full event details{andTickets}, see the{" "}
@@ -316,19 +332,19 @@
                     </a>.
                   </p>
                 </div>
-                <div className="flex flex-col sm:flex-row justify-between md:justify-end space-y-2 sm:space-y-0 sm:space-x-2 border-t border-gray-300 mt-2 p-4">
+                <div className="flex flex-col sm:flex-row justify-between md:justify-end space-y-2 sm:space-y-0 sm:space-x-2 border-t border-gray-300 mt-2 p-4 shadow-lg shadow-inner">
                   <a
-                    target="_blank"
-                    href={props.event.signup_options.tickets.url}
-                    className="w-full sm:w-1/2 md:w-auto rounded p-4 bg-blue-300 text-white font-bold hover:bg-blue-400 text-center"
+                      target="_blank"
+                      href={props.event.signup_options.tickets.url}
+                      className="w-full sm:w-1/2 md:w-auto rounded p-4 bg-blue-300 text-white font-bold hover:bg-blue-400 text-center"
                   >
-                    Event Details
+                      Event Details
                   </a>
                   <Button
-                    onClick={() => props.setActiveEvent(undefined)}
-                    styles="w-full sm:w-1/2 md:w-auto rounded"
+                      onClick={() => props.setActiveEvent(undefined)}
+                      styles="w-full sm:w-1/2 md:w-auto rounded"
                   >
-                    Close
+                      Close
                   </Button>
                 </div>
               </div>
