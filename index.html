@@ -312,7 +312,7 @@
             className={`overflow-x-hidden overflow-y-auto overscroll-contain absolute top-0 right-0 bottom-0 left-0 z-50 bg-gray-300 bg-opacity-50 backdrop-filter backdrop-blur-sm`}
             onClick={(event) => props.setActiveEvent(undefined)}
           >
-            <div className="overflow-y-scroll h-full md:h-auto md:mt-24 lg:mt-48 md:m-auto md:w-3/4 lg:w-2/3 xl:w-1/2 bg-white bg-opacity-100 md:rounded-md filter shadow-lg">
+            <div className="overflow-y-scroll overscroll-contain h-full md:h-auto md:mt-24 lg:mt-48 md:m-auto md:w-3/4 lg:w-2/3 xl:w-1/2 bg-white bg-opacity-100 md:rounded-md filter shadow-lg">
               {imgUrl && <img className="w-full md:rounded-t-md" src={imgUrl} />}
               <div className="md:h-auto">
                 <div class="px-4 pt-4 pb-48 md:pb-4">
@@ -388,7 +388,7 @@
         const [activeEvent, setActiveEvent] = React.useState();
 
         return (
-          <div className="p-2 md:p-8 lg:flex lg:flex-row lg:justify-center h-screen overflow-y-hidden">
+          <div className="p-2 md:p-8 lg:flex lg:flex-row lg:justify-center h-screen">
             <div className="lg:w-5/6 xl:w-4/5 2xl:w-3/4">
                {activeEvent && <ActiveEventModal event={activeEvent} setActiveEvent={setActiveEvent}/>}
               <DateControls setStartDate={setStartDate} startDate={startDate}/>
