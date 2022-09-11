@@ -130,7 +130,7 @@
         }, [props.startDate]);
 
         return (
-          <div className="overflow-y-hidden">
+          <div className="flex flex-col">
             {Object.values(weeks).map(
               (week) => (
                 <Week
@@ -152,7 +152,7 @@
         const weekTitle = `${startDate} - ${endDate}`;
 
         return (
-          <div className="mb-8">
+          <div className="mb-8 w-full md:w-xl">
               <div class="mx-2 mb-4">
                 <span className="text-3xl md:text-5xl font-light text-gray-800">{weekTitle}</span>
               </div>
@@ -185,7 +185,7 @@
         }
 
         return (
-          <div>
+          <div className="max-w-3xl">
             <div className="mx-2 border-b-4 border-gray-400">
               <span className="font-bold text-2xl text-gray-400">{props.day.date.format("dddd, D MMMM")}</span>
             </div>
@@ -313,9 +313,9 @@
             onClick={(event) => props.setActiveEvent(undefined)}
           >
             <div class="flex h-screen md:p-10">
-              <div className="self-center overflow-y-scroll w-full md:w-auto md:overscroll-auto h-full md:h-auto md:m-auto md:w-3/4 lg:w-2/3 xl:w-1/2 bg-white bg-opacity-100 md:rounded-md filter shadow-lg">
+              <div className="self-center overflow-y-scroll w-full md:w-auto md:max-w-7xl md:overscroll-auto h-full md:h-auto md:m-auto md:w-3/4 lg:w-2/3 xl:w-1/2 bg-white bg-opacity-100 md:rounded-md filter shadow-lg">
                 <div className="flex flex-col xl:flex-row">
-                  {imgUrl && <img className="w-full md:rounded-t-md xl:max-h-96 xl:w-1/2 xl:pl-4 xl:pt-4" src={imgUrl} />}
+                  {imgUrl && <img className="w-full md:rounded-t-md xl:w-1/2 xl:pl-4 xl:pt-4" src={imgUrl} />}
                   <div className="m-4 md:self-center">
                     <div class="pb-4 border-b-4 border-gray-800">
                       <span className="text-2xl sm:text-5xl font-light">{eventName}</span>
@@ -397,9 +397,11 @@
         return (
           <div className="p-2 md:p-8 lg:flex lg:flex-row lg:justify-center h-screen overflow-y-scroll">
             <div className="lg:w-5/6 xl:w-4/5 2xl:w-3/4">
-               {activeEvent && <ActiveEventModal event={activeEvent} setActiveEvent={setActiveEvent}/>}
-              <DateControls setStartDate={setStartDate} startDate={startDate}/>
-              <Calendar startDate={startDate} setActiveEvent={setActiveEvent} />
+              <div className="max-w-7xl m-auto">
+                {activeEvent && <ActiveEventModal event={activeEvent} setActiveEvent={setActiveEvent}/>}
+                <DateControls setStartDate={setStartDate} startDate={startDate}/>
+                <Calendar startDate={startDate} setActiveEvent={setActiveEvent} />
+              </div>
             </div>
           </div>
         );
