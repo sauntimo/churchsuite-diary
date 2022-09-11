@@ -282,31 +282,47 @@
 
       const ActiveEventModal = (props) => {
 
-        const imgUrl = props.event.images && props.event.images.md && props.event.images.md.url;
-        const start = dayjs(props.event.datetime_start);
-        const end = dayjs(props.event.datetime_end);
-        const mapsURL = `https://www.google.co.uk/maps/@${props.event.location.latitude},${props.event.location.longitude},17z`;
+        // this destructuring is to safely have properties be defaulted to
+        // undefined instead of throwing on failed property access, as
+        // optional chaining is not available in this situation
+        const {
+          images,
+          datetime_start,
+          datetime_end,
+          location,
+          description,
+          allDay,
+          multiDay,
+          signup_options,
+          name
+        } = props.event || {};
 
-        const andTickets = props.event.signup_options.tickets.enabled === "1"
-          ? " and to book a place"
-          : "";
+        const { url: imgUrl } =  images && images.md || {};
+        const { latitude, longitude, name: locationName} = location || {};
+        const { enabled: ticketEnabled, url: ticketsUrl } = signup_options && signup_options.tickets || {};
+
+        const start = dayjs(datetime_start);
+        const end = dayjs(datetime_end);
+        const mapsURL = `https://www.google.co.uk/maps/@${latitude},${longitude},17z`;
+
+        const andTickets = ticketEnabled === "1" ? " and to book a place" : "";
 
         return (
           <div
-            className="overflow-x-hidden overflow-y-auto overscroll-contain absolute top-0 right-0 bottom-0 left-0 z-50 bg-gray-300 bg-opacity-50 backdrop-filter backdrop-blur-sm"
+            className={`overflow-x-hidden overflow-y-auto overscroll-contain absolute top-0 right-0 bottom-0 left-0 z-50 bg-gray-300 bg-opacity-50 backdrop-filter backdrop-blur-sm`}
             onClick={(event) => props.setActiveEvent(undefined)}
           >
             <div className="overflow-y-scroll h-full md:h-auto md:mt-24 lg:mt-48 md:m-auto md:w-3/4 lg:w-2/3 xl:w-1/2 bg-white bg-opacity-100 md:rounded-md filter shadow-lg">
               {imgUrl && <img className="w-full md:rounded-t-md" src={imgUrl} />}
               <div className="md:h-auto">
                 <div class="px-4 pt-4 pb-48 md:pb-4">
-                  <div className="pb-4 mb-4 border-b-4 border-gray-400">
-                    <span className="text-5xl font-light">{props.event.name}</span>
+                  <div className="pb-4 mb-4 border-b-4 border-gray-800">
+                    <span className="text-5xl font-light">{name}</span>
                   </div>
-                  {props.event.description &&
-                    <div className="py-2" dangerouslySetInnerHTML={{__html: props.event.description}} ></div>
+                  {description &&
+                    <div className="py-2" dangerouslySetInnerHTML={{__html: description}} ></div>
                   }
-                  {props.event.location.name && (
+                  {locationName && (
                     <p>
                       <span className="font-bold pr-2">Venue:</span>
                       <a
@@ -314,7 +330,7 @@
                         target="_blank"
                         className="font-bold text-blue-300 hover:underline cursor-pointer"
                       >
-                        {props.event.location.name}
+                        {locationName}
                       </a>
                     </p>
                   )}
@@ -324,10 +340,10 @@
                   </p>
                   <p>
                     <span className="font-bold pr-2">Time:</span>
-                    {props.event.allDay
+                    {allDay
                       // multi day events which go on all day like week long event
                       ? "All day"
-                      : props.event.multiDay
+                      : multiDay
                       // multi day events which aren't all day like midnight mass
                         ? `${start.format("h:mm a dddd, D MMMM")} - ${end.format("h:mm a dddd, D MMMM")}`
                       // standard events which begin and end on the same day
@@ -336,7 +352,7 @@
                   </p>
                   <p>For full event details{andTickets}, see the{" "}
                     <a
-                      href={props.event.signup_options.tickets.url}
+                      href={ticketsUrl}
                       target="_blank"
                       className="font-bold text-blue-300 hover:underline cursor-pointer"
                     >
@@ -354,7 +370,7 @@
                   </Button>
                   <a
                       target="_blank"
-                      href={props.event.signup_options.tickets.url}
+                      href={ticketsUrl}
                       className="w-full sm:w-1/2 sm:w-auto rounded p-4 bg-blue-300 text-white font-bold hover:bg-blue-400 text-center"
                   >
                       Event Details
@@ -374,7 +390,7 @@
         return (
           <div className="p-2 md:p-8 lg:flex lg:flex-row lg:justify-center h-screen overflow-y-hidden">
             <div className="lg:w-5/6 xl:w-4/5 2xl:w-3/4">
-              {activeEvent && <ActiveEventModal event={activeEvent} setActiveEvent={setActiveEvent}/>}
+               {activeEvent && <ActiveEventModal event={activeEvent} setActiveEvent={setActiveEvent}/>}
               <DateControls setStartDate={setStartDate} startDate={startDate}/>
               <Calendar startDate={startDate} setActiveEvent={setActiveEvent} />
             </div>
