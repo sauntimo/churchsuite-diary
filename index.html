@@ -294,7 +294,7 @@
           allDay,
           multiDay,
           signup_options,
-          name
+          name: eventName
         } = props.event || {};
 
         const { url: imgUrl } =  images && images.md || {};
@@ -309,72 +309,79 @@
 
         return (
           <div
-            className={`overflow-x-hidden overflow-y-auto overscroll-contain absolute top-0 right-0 bottom-0 left-0 z-50 bg-gray-300 bg-opacity-50 backdrop-filter backdrop-blur-sm`}
+            className={`overflow-x-hidden absolute top-0 right-0 bottom-0 left-0 z-50 bg-gray-300 bg-opacity-50 backdrop-filter backdrop-blur-sm`}
             onClick={(event) => props.setActiveEvent(undefined)}
           >
-            <div className="overflow-y-scroll overscroll-contain h-full md:h-auto md:mt-24 lg:mt-48 md:m-auto md:w-3/4 lg:w-2/3 xl:w-1/2 bg-white bg-opacity-100 md:rounded-md filter shadow-lg">
-              {imgUrl && <img className="w-full md:rounded-t-md" src={imgUrl} />}
-              <div className="md:h-auto">
-                <div class="px-4 pt-4 pb-48 md:pb-4">
-                  <div className="pb-4 mb-4 border-b-4 border-gray-800">
-                    <span className="text-2xl sm:text-5xl font-light">{name}</span>
+            <div class="flex h-screen md:p-10">
+              <div className="self-center overflow-y-scroll w-full md:w-auto md:overscroll-auto h-full md:h-auto md:m-auto md:w-3/4 lg:w-2/3 xl:w-1/2 bg-white bg-opacity-100 md:rounded-md filter shadow-lg">
+                <div className="flex flex-col xl:flex-row">
+                  {imgUrl && <img className="w-full md:rounded-t-md xl:max-h-96 xl:w-1/2 xl:pl-4 xl:pt-4" src={imgUrl} />}
+                  <div className="m-4 md:self-center">
+                    <div class="pb-4 border-b-4 border-gray-800">
+                      <span className="text-2xl sm:text-5xl font-light">{eventName}</span>
+                    </div>
                   </div>
-                  {description &&
-                    <div className="py-2" dangerouslySetInnerHTML={{__html: description}} ></div>
-                  }
-                  {locationName && (
+                </div>
+                <div className="md:h-auto overflow-y-scroll">
+                  <div class="px-4 pt-4 pb-48 md:pb-4">
+
+                    {description &&
+                      <div className="py-2" dangerouslySetInnerHTML={{__html: description}} ></div>
+                    }
+                    {locationName && (
+                      <p>
+                        <span className="font-bold pr-2">Venue:</span>
+                        <a
+                          href={mapsURL}
+                          target="_blank"
+                          className="font-bold text-blue-300 hover:underline cursor-pointer"
+                        >
+                          {locationName}
+                        </a>
+                      </p>
+                    )}
                     <p>
-                      <span className="font-bold pr-2">Venue:</span>
+                      <span className="font-bold pr-2">Date:</span>
+                      {start.format("dddd, D MMMM YYYY")}
+                    </p>
+                    <p>
+                      <span className="font-bold pr-2">Time:</span>
+                      {allDay
+                        // multi day events which go on all day like week long event
+                        ? "All day"
+                        : multiDay
+                        // multi day events which aren't all day like midnight mass
+                          ? `${start.format("h:mm a dddd, D MMMM")} - ${end.format("h:mm a dddd, D MMMM")}`
+                        // standard events which begin and end on the same day
+                          : `${start.format("h:mm a")} - ${end.format("h:mm a")}`
+                      }
+                    </p>
+                    <p>For full event details{andTickets}, see the{" "}
                       <a
-                        href={mapsURL}
+                        href={ticketsUrl}
                         target="_blank"
                         className="font-bold text-blue-300 hover:underline cursor-pointer"
                       >
-                        {locationName}
-                      </a>
+                        event details page
+                      </a>.
                     </p>
-                  )}
-                  <p>
-                    <span className="font-bold pr-2">Date:</span>
-                    {start.format("dddd, D MMMM YYYY")}
-                  </p>
-                  <p>
-                    <span className="font-bold pr-2">Time:</span>
-                    {allDay
-                      // multi day events which go on all day like week long event
-                      ? "All day"
-                      : multiDay
-                      // multi day events which aren't all day like midnight mass
-                        ? `${start.format("h:mm a dddd, D MMMM")} - ${end.format("h:mm a dddd, D MMMM")}`
-                      // standard events which begin and end on the same day
-                        : `${start.format("h:mm a")} - ${end.format("h:mm a")}`
-                    }
-                  </p>
-                  <p>For full event details{andTickets}, see the{" "}
-                    <a
-                      href={ticketsUrl}
-                      target="_blank"
-                      className="font-bold text-blue-300 hover:underline cursor-pointer"
+                  </div>
+                    <div className="absolute bottom-0 left-0 right-0 bg-white md:relative flex flex-col flex-col-reverse sm:flex-row justify-between sm:justify-end space-y-2 sm:space-y-0 sm:space-x-2 border-t border-gray-300 mt-2 p-4 shadow-lg shadow-inner">
+                    <Button
+                        onClick={() => props.setActiveEvent(undefined)}
+                        styles="w-full sm:w-1/2 sm:w-auto rounded"
+                        type="default"
                     >
-                      event details page
-                    </a>.
-                  </p>
-                </div>
-                  <div className="absolute bottom-0 left-0 right-0 bg-white md:relative flex flex-col flex-col-reverse sm:flex-row justify-between sm:justify-end space-y-2 sm:space-y-0 sm:space-x-2 border-t border-gray-300 mt-2 p-4 shadow-lg shadow-inner">
-                  <Button
-                      onClick={() => props.setActiveEvent(undefined)}
-                      styles="w-full sm:w-1/2 sm:w-auto rounded"
-                      type="default"
-                  >
-                      Close
-                  </Button>
-                  <a
-                      target="_blank"
-                      href={ticketsUrl}
-                      className="w-full sm:w-1/2 sm:w-auto rounded p-4 bg-blue-300 text-white font-bold hover:bg-blue-400 text-center"
-                  >
-                      Event Details
-                  </a>
+                        Close
+                    </Button>
+                    <a
+                        target="_blank"
+                        href={ticketsUrl}
+                        className="w-full sm:w-1/2 sm:w-auto rounded p-4 bg-blue-300 text-white font-bold hover:bg-blue-400 text-center"
+                    >
+                        Event Details
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
@@ -388,7 +395,7 @@
         const [activeEvent, setActiveEvent] = React.useState();
 
         return (
-          <div className="p-2 md:p-8 lg:flex lg:flex-row lg:justify-center h-screen">
+          <div className="p-2 md:p-8 lg:flex lg:flex-row lg:justify-center h-screen overflow-y-scroll">
             <div className="lg:w-5/6 xl:w-4/5 2xl:w-3/4">
                {activeEvent && <ActiveEventModal event={activeEvent} setActiveEvent={setActiveEvent}/>}
               <DateControls setStartDate={setStartDate} startDate={startDate}/>
