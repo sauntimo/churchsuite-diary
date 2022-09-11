@@ -130,7 +130,7 @@
         }, [props.startDate]);
 
         return (
-          <div>
+          <div className="overflow-y-hidden">
             {Object.values(weeks).map(
               (week) => (
                 <Week
@@ -226,9 +226,14 @@
        * Render a button
        */
       const Button = (props) => {
+
+        const typeStyles = props.type === "primary"
+          ? "bg-blue-300 text-white hover:bg-blue-400"
+          : "bg-white text-gray-700 hover:bg-gray-300";
+
         return (
           <button
-            className={`p-4 bg-blue-300 text-white font-bold hover:bg-blue-400 shadow hover:shadow-inner ${props.styles}`}
+            className={`p-4 font-bold shadow hover:shadow-inner ${typeStyles} ${props.styles}`}
             onClick={props.onClick}
           >
             {props.children}
@@ -246,25 +251,28 @@
         const forwardOneWeek = () => props.setStartDate(nextWeek);
 
         return (
-          <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:divide-x sm:divide-white mb-8">
+          <div className="flex flex-row justify-between space-x-2 md:space-x-0 md:divide-x md:divide-white md:justify-start mb-4 md:mb-8">
             <Button
               onClick={() => backOneWeek()}
               startDate={props.startDate}
-              styles="rounded-full sm:rounded-r-none sm:pl-6"
+              type="primary"
+              styles="w-1/3 md:w-auto rounded-md md:rounded-r-none md:rounded-l-full md:pl-6"
             >
               Back
             </Button>
             <Button
               onClick={() => resetDate()}
               startDate={props.startDate}
-              styles="rounded-full sm:rounded-none"
+              type="primary"
+              styles="w-1/3 md:w-auto rounded-md md:rounded-none"
             >
               This week
             </Button>
             <Button
               onClick={() => forwardOneWeek()}
               startDate={props.startDate}
-              styles="rounded-full sm:rounded-l-none sm:pr-6"
+              type="primary"
+              styles="w-1/3 md:w-auto rounded-md md:rounded-l-none md:rounded-r-full md:pr-6"
             >
               Forward
             </Button>
@@ -285,14 +293,16 @@
 
         return (
           <div
-            className="absolute top-0 right-0 bottom-0 left-0 z-50 bg-gray-300 bg-opacity-50 backdrop-filter backdrop-blur-sm"
+            className="overflow-x-hidden overflow-y-auto overscroll-contain absolute top-0 right-0 bottom-0 left-0 z-50 bg-gray-300 bg-opacity-50 backdrop-filter backdrop-blur-sm"
             onClick={(event) => props.setActiveEvent(undefined)}
           >
-            <div className="m-4 md:m-x-0 md:mt-96 md:m-auto md:w-3/4 lg:w-2/3 xl:w-1/2 bg-white bg-opacity-100 rounded-md filter shadow-lg">
-              {imgUrl && <img className="w-full rounded-t-md" src={imgUrl} />}
-              <div>
-                <div class="p-4">
-                  <span className="text-4xl font-light">{props.event.name}</span>
+            <div className="overflow-y-scroll h-full md:h-auto md:mt-24 lg:mt-48 md:m-auto md:w-3/4 lg:w-2/3 xl:w-1/2 bg-white bg-opacity-100 md:rounded-md filter shadow-lg">
+              {imgUrl && <img className="w-full md:rounded-t-md" src={imgUrl} />}
+              <div className="md:h-auto">
+                <div class="px-4 pt-4 pb-48 md:pb-4">
+                  <div className="pb-4 mb-4 border-b-4 border-gray-400">
+                    <span className="text-5xl font-light">{props.event.name}</span>
+                  </div>
                   {props.event.description &&
                     <div className="py-2" dangerouslySetInnerHTML={{__html: props.event.description}} ></div>
                   }
@@ -334,20 +344,21 @@
                     </a>.
                   </p>
                 </div>
-                <div className="flex flex-col sm:flex-row justify-between md:justify-end space-y-2 sm:space-y-0 sm:space-x-2 border-t border-gray-300 mt-2 p-4 shadow-lg shadow-inner">
-                  <a
-                      target="_blank"
-                      href={props.event.signup_options.tickets.url}
-                      className="w-full sm:w-1/2 md:w-auto rounded p-4 bg-blue-300 text-white font-bold hover:bg-blue-400 text-center"
-                  >
-                      Event Details
-                  </a>
+                  <div className="absolute bottom-0 left-0 right-0 bg-white md:relative flex flex-col flex-col-reverse sm:flex-row justify-between sm:justify-end space-y-2 sm:space-y-0 sm:space-x-2 border-t border-gray-300 mt-2 p-4 shadow-lg shadow-inner">
                   <Button
                       onClick={() => props.setActiveEvent(undefined)}
-                      styles="w-full sm:w-1/2 md:w-auto rounded"
+                      styles="w-full sm:w-1/2 sm:w-auto rounded"
+                      type="default"
                   >
                       Close
                   </Button>
+                  <a
+                      target="_blank"
+                      href={props.event.signup_options.tickets.url}
+                      className="w-full sm:w-1/2 sm:w-auto rounded p-4 bg-blue-300 text-white font-bold hover:bg-blue-400 text-center"
+                  >
+                      Event Details
+                  </a>
                 </div>
               </div>
             </div>
@@ -361,7 +372,7 @@
         const [activeEvent, setActiveEvent] = React.useState();
 
         return (
-          <div className="p-2 md:p-8 lg:flex lg:flex-row lg:justify-center">
+          <div className="p-2 md:p-8 lg:flex lg:flex-row lg:justify-center h-screen overflow-y-hidden">
             <div className="lg:w-5/6 xl:w-4/5 2xl:w-3/4">
               {activeEvent && <ActiveEventModal event={activeEvent} setActiveEvent={setActiveEvent}/>}
               <DateControls setStartDate={setStartDate} startDate={startDate}/>
