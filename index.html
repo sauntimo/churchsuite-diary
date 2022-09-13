@@ -307,14 +307,17 @@
 
         const andTickets = ticketEnabled === "1" ? " and to book a place" : "";
 
+        // can't rely on h-screen for mobile due to the url bar
+        const height = window.innerHeight;
+
         return (
           <div
-            className={`overflow-x-hidden absolute top-0 right-0 bottom-0 left-0 z-50 bg-gray-300 bg-opacity-50 backdrop-filter backdrop-blur-sm`}
+            className={`overscroll-contain overflow-x-hidden absolute top-0 right-0 bottom-0 left-0 z-50 bg-gray-300 bg-opacity-50 backdrop-filter backdrop-blur-sm`}
             onClick={(event) => props.setActiveEvent(undefined)}
           >
-            <div class="flex h-screen md:p-10">
-              <div className="self-center overflow-y-scroll w-full md:w-auto md:max-w-7xl md:overscroll-auto h-full md:h-auto md:m-auto md:w-3/4 lg:w-2/3 xl:w-1/2 bg-white bg-opacity-100 md:rounded-md filter shadow-lg">
-                <div className="flex flex-col xl:flex-row">
+            <div style={{height}} class={`h-[${height}px] flex overscroll-contain md:p-10`}>
+              <div className="self-center overflow-y-scroll overscroll-contain w-full md:w-auto md:max-w-7xl md:overscroll-auto h-full md:h-auto md:m-auto md:w-3/4 lg:w-2/3 xl:w-1/2 bg-white bg-opacity-100 md:rounded-md filter shadow-lg">
+                <div className="flex flex-col xl:flex-row overscroll-contain">
                   {imgUrl && <img className="w-full md:rounded-t-md xl:w-1/2 xl:pl-4 xl:pt-4" src={imgUrl} />}
                   <div className="m-4 md:self-center">
                     <div class="pb-4 border-b-4 border-gray-800">
@@ -322,8 +325,8 @@
                     </div>
                   </div>
                 </div>
-                <div className="md:h-auto overflow-y-scroll">
-                  <div class="px-4 pt-4 pb-48 md:pb-4">
+                <div className="md:h-auto overflow-y-scroll overscroll-contain">
+                  <div class="p-4 mb-40 md:mb-0">
 
                     {description &&
                       <div className="py-2" dangerouslySetInnerHTML={{__html: description}} ></div>
@@ -366,7 +369,7 @@
                       </a>.
                     </p>
                   </div>
-                    <div className="absolute bottom-0 left-0 right-0 bg-white md:relative flex flex-col flex-col-reverse sm:flex-row justify-between sm:justify-end space-y-2 space-y-reverse sm:space-y-0 sm:space-x-2 border-t border-gray-300 mt-2 p-4 shadow-lg shadow-inner">
+                  <div className="absolute bottom-0 left-0 right-0 bg-white md:relative flex flex-col flex-col-reverse sm:flex-row justify-between sm:justify-end space-y-2 space-y-reverse sm:space-y-0 sm:space-x-2 border-t border-gray-300 mt-2 p-4 shadow-lg shadow-inner">
                     <Button
                         onClick={() => props.setActiveEvent(undefined)}
                         styles="w-full sm:w-1/2 sm:w-auto rounded"
@@ -396,9 +399,9 @@
 
         return (
           <div className="p-2 md:p-8 lg:flex lg:flex-row lg:justify-center h-screen overflow-y-scroll">
+            {activeEvent && <ActiveEventModal event={activeEvent} setActiveEvent={setActiveEvent}/>}
             <div className="lg:w-5/6 xl:w-4/5 2xl:w-3/4">
               <div className="max-w-7xl m-auto">
-                {activeEvent && <ActiveEventModal event={activeEvent} setActiveEvent={setActiveEvent}/>}
                 <DateControls setStartDate={setStartDate} startDate={startDate}/>
                 <Calendar startDate={startDate} setActiveEvent={setActiveEvent} />
               </div>
