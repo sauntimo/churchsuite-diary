@@ -318,21 +318,6 @@ function buildSummaryListData( data, first_day, last_day ){
     ALL_DATES = {};
 
     data.forEach( function( event ){
-
-        // don't want to display Highgrove events
-        if(
-            (
-                event.location &&
-                event.location.name === 'Highgrove Church'
-            ) ||
-            (
-                event.site &&
-                event.site.name === 'Highgrove'
-            )
-        ){
-            return false;
-        }
-
         var start_date = moment( event.datetime_start );
         var end_date = moment( event.datetime_end );
         var start_date_string = moment( start_date ).format( api_date_format );
