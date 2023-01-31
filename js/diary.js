@@ -230,7 +230,8 @@ function getCalendarData( first_day, last_day ){
         dataType: 'jsonp',
         data: {
             date_start: first_day,
-            date_end: last_day
+            date_end: last_day,
+            site_ids: [1],
         }
     })
     .done(function( data ) {
