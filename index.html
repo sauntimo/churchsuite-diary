@@ -2,44 +2,62 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="initial-scale=1.0001, minimum-scale=1.0001, maximum-scale=1.0001, user-scalable=no"/>
-    <meta name="viewport" content="width=device-width">
+    <meta
+      name="viewport"
+      content="initial-scale=1.0001, minimum-scale=1.0001, maximum-scale=1.0001, user-scalable=no"
+    />
+    <meta name="viewport" content="width=device-width" />
     <title>ChurchSuite Diary</title>
-    <link href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script crossorigin src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/fetch-jsonp@1.2.2/build/fetch-jsonp.js"></script>
-    <script crossorigin src="https://unpkg.com/dayjs@1.11.5/dayjs.min.js"></script>
+    <link
+      href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <script
+      crossorigin
+      src="https://unpkg.com/react@17/umd/react.production.min.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/fetch-jsonp@1.2.2/build/fetch-jsonp.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/dayjs@1.11.5/dayjs.min.js"
+    ></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
   </head>
   <body>
     <div id="root"></div>
     <script type="text/babel">
-
       /**
        * Takes an array of events, finds events spanning multiple days
        * and replicates them on each day they span
        */
       const processMultiDayEvents = (events) => {
-        return events.flatMap(event => {
+        return events.flatMap((event) => {
           const start = dayjs(event.datetime_start);
           const end = dayjs(event.datetime_end);
           const durationDays = end.diff(start, "day") + 1;
           const allDay = end.diff(start, "day") + 1;
 
-          if(start.isSame(end, "date")){
-            return [{...event, multiDay: false, allDay: false}];
+          if (start.isSame(end, "date")) {
+            return [{ ...event, multiDay: false, allDay: false }];
           }
 
-          return Array.from(Array(durationDays).keys()).map(index => {
+          return Array.from(Array(durationDays).keys()).map((index) => {
+            const newStart =
+              index === 0
+                ? dayjs(event.datetime_start).toDate()
+                : start.add(index, "day").startOf("day").toDate();
 
-            const newStart = index === 0
-              ? dayjs(event.datetime_start).toDate()
-              : start.add(index, "day").startOf("day").toDate();
-
-            const newEnd = index === (durationDays - 1)
-              ? dayjs(event.datetime_end).toDate()
-              : start.add(index, "day").endOf("day").toDate()
+            const newEnd =
+              index === durationDays - 1
+                ? dayjs(event.datetime_end).toDate()
+                : start.add(index, "day").endOf("day").toDate();
 
             return {
               ...event,
@@ -47,10 +65,10 @@
               datetime_start: newStart,
               datetime_end: newEnd,
               multiDay: true,
-            }
+            };
           });
         });
-      }
+      };
 
       /**
        * Takes an array of events and processes them into an array of days
@@ -66,35 +84,42 @@
           // otherwise begin with this event
           data[currentDateString] = {
             date: currentDate,
-            events: [...(
-              data[currentDateString]
+            events: [
+              ...(data[currentDateString]
                 ? data[currentDateString].events
-                : []
-            ), cur ]
+                : []),
+              cur,
+            ],
           };
           return data;
         }, {});
 
         return Object.values(eventDays);
-      }
+      };
 
       /**
        * Takes an array of days and processes them into two week objects
        */
       const processDaysIntoWeeks = (days, startDate) => {
         const weeks = {
-          first: {startDate, days: [], sunday: [] },
-          second: {startDate: dayjs(startDate).add(1, "week"), days: [], sunday: [] }
+          first: { startDate, days: [], sunday: [] },
+          second: {
+            startDate: dayjs(startDate).add(1, "week"),
+            days: [],
+            sunday: [],
+          },
         };
 
-        days.forEach(day => {
-          const week = day.date.isBefore(dayjs(startDate).add(1, "week")) ? "first" : "second";
+        days.forEach((day) => {
+          const week = day.date.isBefore(dayjs(startDate).add(1, "week"))
+            ? "first"
+            : "second";
           const type = day.date.format("dddd") === "Sunday" ? "sunday" : "days";
-          weeks[week][type].push(day)
-        })
+          weeks[week][type].push(day);
+        });
 
         return weeks;
-      }
+      };
 
       /**
        * Get array of events from church suite data and process them into
@@ -104,102 +129,106 @@
         const events = processMultiDayEvents(data);
         const days = processEventsIntoDays(events);
         return processDaysIntoWeeks(days, startDate);
-      }
+      };
 
       const Calendar = (props) => {
         const [weeks, setWeeks] = React.useState([]);
 
-         // Get all event data from ChurchSuite and render a list of events
+        // Get all event data from ChurchSuite and render a list of events
         React.useEffect(() => {
           const getEvents = async () => {
             const params = new URLSearchParams({
               date_start: dayjs(props.startDate).format("YYYY-MM-DD"),
-              date_end: dayjs(props.startDate).add(2, "week").format("YYYY-MM-DD"),
-            })
+              date_end: dayjs(props.startDate)
+                .add(2, "week")
+                .format("YYYY-MM-DD"),
+              site_ids: [1],
+            });
 
-            await fetchJsonp(`https://woodlands.churchsuite.co.uk/embed/calendar/json?${params.toString()}`, {
-              method: 'GET',
-              headers: {'content-type': 'jsonp',  'Access-Control-Allow-Origin':'*'},
-              mode: 'cors',
-            })
+            await fetchJsonp(
+              `https://woodlands.churchsuite.co.uk/embed/calendar/json?${params.toString()}`,
+              {
+                method: "GET",
+                headers: {
+                  "content-type": "jsonp",
+                  "Access-Control-Allow-Origin": "*",
+                },
+                mode: "cors",
+              }
+            )
               .then((response) => response.json())
               .then((data) => setWeeks(processData(data, props.startDate)));
-          }
+          };
 
           getEvents();
         }, [props.startDate]);
 
         return (
           <div className="flex flex-col">
-            {Object.values(weeks).map(
-              (week) => (
-                <Week
-                  week={week}
-                  setActiveEvent={props.setActiveEvent}
-                />
+            {Object.values(weeks).map((week) => (
+              <Week week={week} setActiveEvent={props.setActiveEvent} />
             ))}
           </div>
-        )
-      }
+        );
+      };
 
       /**
        * Render a single week
        */
       const Week = (props) => {
-
         const startDate = dayjs(props.week.startDate).format("D MMMM");
-        const endDate = dayjs(props.week.startDate).add(6, "day").format(" D MMMM");
+        const endDate = dayjs(props.week.startDate)
+          .add(6, "day")
+          .format(" D MMMM");
         const weekTitle = `${startDate} - ${endDate}`;
 
         return (
           <div className="mb-8 w-full md:w-xl">
-              <div class="mx-2 mb-4">
-                <span className="text-3xl md:text-5xl font-light text-gray-800">{weekTitle}</span>
+            <div class="mx-2 mb-4">
+              <span className="text-3xl md:text-5xl font-light text-gray-800">
+                {weekTitle}
+              </span>
+            </div>
+            <div class="flex flex-col md:flex-row md:space-x-8">
+              <div class="flex flex-col w-full md:w-1/2">
+                {props.week.days.map((day) => (
+                  <Day day={day} setActiveEvent={props.setActiveEvent} />
+                ))}
               </div>
-              <div class="flex flex-col md:flex-row md:space-x-8">
-                <div class="flex flex-col w-full md:w-1/2">
-                  {props.week.days.map(day =>
-                    <Day
-                      day={day}
-                      setActiveEvent={props.setActiveEvent}
-                    />
-                  )}
-                </div>
-                <div className="w-full md:w-1/2">
-                  <Day
-                    day={props.week.sunday[0]}
-                    setActiveEvent={props.setActiveEvent}
-                  />
-                </div>
+              <div className="w-full md:w-1/2">
+                <Day
+                  day={props.week.sunday[0]}
+                  setActiveEvent={props.setActiveEvent}
+                />
               </div>
+            </div>
           </div>
-        )
-      }
+        );
+      };
 
       /**
        * Render a single day
        */
       const Day = (props) => {
-        if(!props.day){
+        if (!props.day) {
           return null;
         }
 
         return (
           <div className="max-w-3xl">
             <div className="mx-2 border-b-4 border-gray-400">
-              <span className="font-bold text-2xl text-gray-400">{props.day.date.format("dddd, D MMMM")}</span>
+              <span className="font-bold text-2xl text-gray-400">
+                {props.day.date.format("dddd, D MMMM")}
+              </span>
             </div>
             <div class="flex flex-col py-2">
-              {props.day.events.map(event =>
-                  <Event
-                    event={event}
-                    setActiveEvent={props.setActiveEvent}
-                  />
-              )}
+              {props.day.events.map((event) => (
+                <Event event={event} setActiveEvent={props.setActiveEvent} />
+              ))}
             </div>
           </div>
-        )
-      }
+        );
+      };
 
       /**
        * Render a single event
@@ -210,26 +239,24 @@
             className="flex flex-row justify-between cursor-pointer p-2 hover:bg-gray-100 rounded-md"
             onClick={() => props.setActiveEvent(props.event)}
           >
-              <span className="font-bold text-blue-300">{props.event.name}</span>
-              <span className="font-bold text-blue-300">
-                {props.event.allDay
-                  ? "All day"
-                  : dayjs(props.event.datetime_start).format("h:mm a")
-                }
-              </span>
+            <span className="font-bold text-blue-300">{props.event.name}</span>
+            <span className="font-bold text-blue-300">
+              {props.event.allDay
+                ? "All day"
+                : dayjs(props.event.datetime_start).format("h:mm a")}
+            </span>
           </div>
-        )
-      }
-
+        );
+      };
 
       /**
        * Render a button
        */
       const Button = (props) => {
-
-        const typeStyles = props.type === "primary"
-          ? "bg-blue-300 text-white hover:bg-blue-400"
-          : "bg-white text-gray-700 hover:bg-gray-300";
+        const typeStyles =
+          props.type === "primary"
+            ? "bg-blue-300 text-white hover:bg-blue-400"
+            : "bg-white text-gray-700 hover:bg-gray-300";
 
         return (
           <button
@@ -237,9 +264,9 @@
             onClick={props.onClick}
           >
             {props.children}
-          </button>)
-        ;
-      }
+          </button>
+        );
+      };
 
       const DateControls = (props) => {
         const lastWeek = dayjs(props.startDate).subtract(1, "week").toDate();
@@ -278,10 +305,9 @@
             </Button>
           </div>
         );
-      }
+      };
 
       const ActiveEventModal = (props) => {
-
         // this destructuring is to safely have properties be defaulted to
         // undefined instead of throwing on failed property access, as
         // optional chaining is not available in this situation
@@ -294,12 +320,13 @@
           allDay,
           multiDay,
           signup_options,
-          name: eventName
+          name: eventName,
         } = props.event || {};
 
-        const { url: imgUrl } =  images && images.md || {};
-        const { latitude, longitude, name: locationName} = location || {};
-        const { enabled: ticketEnabled, url: ticketsUrl } = signup_options && signup_options.tickets || {};
+        const { url: imgUrl } = (images && images.md) || {};
+        const { latitude, longitude, name: locationName } = location || {};
+        const { enabled: ticketEnabled, url: ticketsUrl } =
+          (signup_options && signup_options.tickets) || {};
 
         const start = dayjs(datetime_start);
         const end = dayjs(datetime_end);
@@ -315,22 +342,31 @@
             className={`overscroll-contain overflow-x-hidden absolute top-0 right-0 bottom-0 left-0 z-50 bg-gray-300 bg-opacity-50 backdrop-filter backdrop-blur-sm`}
             onClick={(event) => props.setActiveEvent(undefined)}
           >
-            <div style={{height}} class="flex overscroll-contain md:p-10" >
+            <div style={{ height }} class="flex overscroll-contain md:p-10">
               <div className="self-center overflow-y-scroll overscroll-contain w-full md:w-auto md:max-w-7xl md:overscroll-auto h-full md:h-auto md:m-auto md:w-3/4 lg:w-2/3 xl:w-1/2 bg-white bg-opacity-100 md:rounded-md filter shadow-lg">
                 <div className="flex flex-col xl:flex-row overscroll-contain">
-                  {imgUrl && <img className="w-full md:rounded-t-md xl:w-1/2 xl:pl-4 xl:pt-4" src={imgUrl} />}
+                  {imgUrl && (
+                    <img
+                      className="w-full md:rounded-t-md xl:w-1/2 xl:pl-4 xl:pt-4"
+                      src={imgUrl}
+                    />
+                  )}
                   <div className="m-4 md:self-center">
                     <div class="pb-4 border-b-4 border-gray-800">
-                      <span className="text-2xl sm:text-5xl font-light">{eventName}</span>
+                      <span className="text-2xl sm:text-5xl font-light">
+                        {eventName}
+                      </span>
                     </div>
                   </div>
                 </div>
                 <div className="md:h-auto overflow-y-scroll overscroll-contain">
                   <div class="p-4 mb-40 md:mb-0">
-
-                    {description &&
-                      <div className="py-2" dangerouslySetInnerHTML={{__html: description}} ></div>
-                    }
+                    {description && (
+                      <div
+                        className="py-2"
+                        dangerouslySetInnerHTML={{ __html: description }}
+                      ></div>
+                    )}
                     {locationName && (
                       <p>
                         <span className="font-bold pr-2">Venue:</span>
@@ -350,39 +386,42 @@
                     <p>
                       <span className="font-bold pr-2">Time:</span>
                       {allDay
-                        // multi day events which go on all day like week long event
-                        ? "All day"
+                        ? // multi day events which go on all day like week long event
+                          "All day"
                         : multiDay
-                        // multi day events which aren't all day like midnight mass
-                          ? `${start.format("h:mm a dddd, D MMMM")} - ${end.format("h:mm a dddd, D MMMM")}`
-                        // standard events which begin and end on the same day
-                          : `${start.format("h:mm a")} - ${end.format("h:mm a")}`
-                      }
+                        ? // multi day events which aren't all day like midnight mass
+                          `${start.format(
+                            "h:mm a dddd, D MMMM"
+                          )} - ${end.format("h:mm a dddd, D MMMM")}`
+                        : // standard events which begin and end on the same day
+                          `${start.format("h:mm a")} - ${end.format("h:mm a")}`}
                     </p>
-                    <p>For full event details{andTickets}, see the{" "}
+                    <p>
+                      For full event details{andTickets}, see the{" "}
                       <a
                         href={ticketsUrl}
                         target="_blank"
                         className="font-bold text-blue-300 hover:underline cursor-pointer"
                       >
                         event details page
-                      </a>.
+                      </a>
+                      .
                     </p>
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 bg-white md:relative flex flex-col flex-col-reverse sm:flex-row justify-between sm:justify-end space-y-2 space-y-reverse sm:space-y-0 sm:space-x-2 border-t border-gray-300 mt-2 p-4 shadow-lg shadow-inner">
                     <Button
-                        onClick={() => props.setActiveEvent(undefined)}
-                        styles="w-full sm:w-1/2 sm:w-auto rounded"
-                        type="default"
+                      onClick={() => props.setActiveEvent(undefined)}
+                      styles="w-full sm:w-1/2 sm:w-auto rounded"
+                      type="default"
                     >
-                        Close
+                      Close
                     </Button>
                     <a
-                        target="_blank"
-                        href={ticketsUrl}
-                        className="w-full sm:w-1/2 sm:w-auto rounded p-4 bg-blue-300 text-white font-bold hover:bg-blue-400 text-center"
+                      target="_blank"
+                      href={ticketsUrl}
+                      className="w-full sm:w-1/2 sm:w-auto rounded p-4 bg-blue-300 text-white font-bold hover:bg-blue-400 text-center"
                     >
-                        Event Details
+                      Event Details
                     </a>
                   </div>
                 </div>
@@ -390,7 +429,7 @@
             </div>
           </div>
         );
-      }
+      };
 
       const App = () => {
         const initialStartDate = dayjs().startOf("week").add(1, "day").toDate();
@@ -399,18 +438,29 @@
 
         return (
           <div className="p-2 md:p-8 lg:flex lg:flex-row lg:justify-center h-screen overflow-y-scroll">
-            {activeEvent && <ActiveEventModal event={activeEvent} setActiveEvent={setActiveEvent}/>}
+            {activeEvent && (
+              <ActiveEventModal
+                event={activeEvent}
+                setActiveEvent={setActiveEvent}
+              />
+            )}
             <div className="lg:w-5/6 xl:w-4/5 2xl:w-3/4">
               <div className="max-w-7xl m-auto">
-                <DateControls setStartDate={setStartDate} startDate={startDate}/>
-                <Calendar startDate={startDate} setActiveEvent={setActiveEvent} />
+                <DateControls
+                  setStartDate={setStartDate}
+                  startDate={startDate}
+                />
+                <Calendar
+                  startDate={startDate}
+                  setActiveEvent={setActiveEvent}
+                />
               </div>
             </div>
           </div>
         );
-      }
+      };
 
-      ReactDOM.render( <App />, document.getElementById('root') );
+      ReactDOM.render(<App />, document.getElementById("root"));
     </script>
   </body>
 </html>
